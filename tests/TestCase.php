@@ -12,9 +12,5 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $path = database_path('/database.sqlite');
-
-        if (! file_exists($path))
-            File::put($path,null);
     }
 }

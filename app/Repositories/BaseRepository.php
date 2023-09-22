@@ -14,6 +14,11 @@ class BaseRepository implements BaseRepositoryInterface
         $this->model = $model;
     }
 
+    public function all(array $columns = ["*"], array $relations = [])
+    {
+        return $this->model->query()->select($columns)->with($relations)->paginate(50);
+    }
+
     public function findById(string $modelId, array $columns = ["*"], array $relations = [])
     {
         return $this->model->query()->select($columns)->with($relations)->findOrFail($modelId);
