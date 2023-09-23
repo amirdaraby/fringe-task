@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,6 +17,7 @@ class OrderFactory extends Factory
      */
     public function definition()
     {
+
         return [
             //
         ];

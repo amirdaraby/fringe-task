@@ -15,4 +15,5 @@ class Product extends Model
       "price",
       "inventory"
     ];
+
 }

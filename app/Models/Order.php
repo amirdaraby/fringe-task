@@ -9,7 +9,8 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-
-    ];
+    public function products()
+    {
+        return $this->embedsMany(Product::class);
+    }
 }

@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -11,6 +12,7 @@ use Tests\TestCase;
 class ProductTest extends TestCase
 {
 
+    use DatabaseMigrations;
     public function testProductsIndexResponsesAuthenticationError(): void
     {
         $response = $this->getJson(route("api.products_index"));
