@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Repositories\Cache\CacheRepositoryInterface;
 use App\Repositories\Order\OrderRepositoryInterface;
 use App\Repositories\Product\ProductRepositoryInterface;
 use App\Utils\Response;
@@ -12,10 +13,16 @@ class OrderService
     private ProductRepositoryInterface $productRepository;
     private OrderRepositoryInterface $orderRepository;
 
-    public function __construct(ProductRepositoryInterface $productRepository, OrderRepositoryInterface $orderRepository)
+    private CacheRepositoryInterface $cacheRepository;
+
+    const PRODUCTS_CACHE_TAG = "products";
+    const ORDERS_CACHE_TAG = "orders";
+
+    public function __construct(ProductRepositoryInterface $productRepository, OrderRepositoryInterface $orderRepository, CacheRepositoryInterface $cacheRepository)
     {
         $this->productRepository = $productRepository;
         $this->orderRepository = $orderRepository;
+        $this->cacheRepository = $cacheRepository;
     }
 
     public function storeOrder(array $validatedData): object
@@ -52,6 +59,9 @@ class OrderService
 
         $order->save();
 
+        $this->cacheRepository->forgetByTag(self::ORDERS_CACHE_TAG);
+        $this->cacheRepository->forgetByTag(self::PRODUCTS_CACHE_TAG);
+
         return Response::success($order, "Order Created", HttpResponse::HTTP_CREATED);
     }
 
@@ -79,6 +89,7 @@ class OrderService
 
                 $product->inventory -= $diffQuantity;
                 $orderCount += $diffQuantity;
+
                 $product->save();
 
             } elseif ($diffQuantity < 0) {
@@ -97,6 +108,9 @@ class OrderService
         $order->count = $orderCount;
         $order->save();
 
+        $this->cacheRepository->forgetByTag(self::ORDERS_CACHE_TAG);
+        $this->cacheRepository->forgetByTag(self::PRODUCTS_CACHE_TAG);
+
         return Response::success($order, "Order Update", HttpResponse::HTTP_ACCEPTED);
     }
 
@@ -109,6 +123,10 @@ class OrderService
             $product->inventory += $orderProduct->quantity;
             $product->save();
         }
+
+        $this->cacheRepository->forgetByTag(self::ORDERS_CACHE_TAG);
+        $this->cacheRepository->forgetByTag(self::PRODUCTS_CACHE_TAG);
+
         $deleted = $order->delete();
 
         return Response::success($deleted, "Order Delete", HttpResponse::HTTP_ACCEPTED);

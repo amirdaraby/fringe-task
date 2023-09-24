@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Order\OrderRequest;
+use App\Repositories\Cache\CacheRepositoryInterface;
 use App\Repositories\Order\OrderRepositoryInterface;
 use App\Services\OrderService;
 use App\Utils\Response;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -14,16 +16,24 @@ class OrderController extends Controller
 {
     private OrderRepositoryInterface $orderRepository;
     private OrderService $orderService;
+    private CacheRepositoryInterface $cacheRepository;
+    private const CACHE_TAG = "orders";
 
-    public function __construct(OrderRepositoryInterface $orderRepository, OrderService $orderService)
+    public function __construct(OrderRepositoryInterface $orderRepository, CacheRepositoryInterface $cacheRepository, OrderService $orderService)
     {
         $this->orderRepository = $orderRepository;
         $this->orderService = $orderService;
+        $this->cacheRepository = $cacheRepository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $orders = $this->orderRepository->all();
+        $page = $request->get("page");
+
+        $orders = $this->cacheRepository->getOrSet(self::CACHE_TAG, "all_orders_page_$page", function () {
+            return $this->orderRepository->all();
+        }, 120);
+
 
         if ($orders->isEmpty())
             throw new NotFoundHttpException();
@@ -38,7 +48,9 @@ class OrderController extends Controller
 
     public function show(string $id)
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->cacheRepository->getOrSet(self::CACHE_TAG, "order_show_$id", function () use ($id) {
+            $this->orderRepository->findById($id);
+        }, 120);
 
         return Response::success($order, "Order Show", HttpResponse::HTTP_OK);
     }
